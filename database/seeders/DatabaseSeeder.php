@@ -25,13 +25,12 @@ class DatabaseSeeder extends Seeder
         // $this->call(UnitSeeder::class,);
         // $this->call(EmployeeSeeder::class,);
         // $this->call(FullUnitVerificationSeeder::class,);
-        $this->call(SpecificEmployeeSeeder::class);
+        // $this->call(SpecificEmployeeSeeder::class);
         // $this->call(AttendanceSeeder::class,);
         $this->call(DiklatCategorySeeder::class);
         $this->call(DiklatSettingSeeder::class);
         $this->call(AnnouncementCategorySeeder::class);
-        $this->call(AnnouncementSeeder::class);
+        // $this->call(AnnouncementSeeder::class);
         $this->call(EmployeeExcelSeeder::class);
-
     }
 }
