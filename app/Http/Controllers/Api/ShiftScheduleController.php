@@ -279,7 +279,6 @@ class ShiftScheduleController extends ApiController
 
 
 
-
     public function downloadTemplate(Request $request)
     {
         $request->validate([
@@ -318,5 +317,66 @@ class ShiftScheduleController extends ApiController
             $endDate->format('Y-m-d'),
             $request->employee_ids
         ), $fileName);
+    }
+    public function employeeList(Request $request)
+    {
+        $user     = Auth::user();
+        $role     = strtolower($user->role);
+        $position = strtolower($user->employee->position->name ?? '');
+
+        // Hanya select kolom yang dibutuhkan agar ringan
+        $query = Employee::with(['user:id,name', 'position:id,name'])
+            ->select('user_id', 'nip', 'position_id');
+
+        $isSuperAdmin = in_array($role, ['superadmin', 'director'])
+            || str_contains($position, 'sdi')
+            || str_contains($position, 'sumber daya insani');
+
+        if ($isSuperAdmin) {
+            // Superadmin / Director / SDI: lihat semua karyawan
+        } elseif ($role === 'admin') {
+            // Admin: hanya lihat bawahannya (approval_lines) + diri sendiri
+            $query->where(function ($q) use ($user) {
+                $q->whereIn('user_id', function ($s) use ($user) {
+                    $s->select('user_id')
+                        ->from('approval_lines')
+                        ->where('approver_id', $user->id);
+                })->orWhere('user_id', $user->id);
+            })->whereHas('user', function ($q) {
+                $q->whereNotIn('role', ['superadmin', 'director']);
+            });
+        } else {
+            // User biasa: hanya diri sendiri
+            $query->where('user_id', $user->id);
+        }
+
+        // Filter pencarian nama
+        $search = $request->query('search', '');
+        if (!empty($search)) {
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'ilike', '%' . $search . '%');
+            });
+        }
+
+        $limit     = max(1, (int) $request->query('limit', 20));
+        $paginated = $query->paginate($limit);
+
+        $items = collect($paginated->items())->map(fn($emp) => [
+            'user_id'  => $emp->user_id,
+            'name'     => $emp->user?->name ?? 'Unknown',
+            'nip'      => $emp->nip ?? '-',
+            'position' => $emp->position?->name ?? '-',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'data'         => $items,
+                'total'        => $paginated->total(),
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'has_more'     => $paginated->hasMorePages(),
+            ],
+        ]);
     }
 }
