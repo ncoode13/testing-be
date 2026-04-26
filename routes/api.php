@@ -144,14 +144,16 @@ Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
             Route::delete('/{id}', [TimeOffController::class, 'destroy']);
         });
 
-        Route::prefix('shift-schedules')->group(function () {
+     Route::prefix('shift-schedules')->group(function () {
             Route::get('/', [ShiftScheduleController::class, 'index']);
             Route::post('/', [ShiftScheduleController::class, 'store']);
             Route::get('/units', [UnitController::class, 'index']);
             Route::post('/import', [ShiftScheduleController::class, 'import']);
             Route::get('/template', [ShiftScheduleController::class, 'downloadTemplate']);
             Route::post('/custom-export', [ShiftScheduleController::class, 'customExport']);
+            Route::get('/employee-list', [ShiftScheduleController::class, 'employeeList']);
         });
+
 
         Route::prefix('shifts')->group(function () {
             Route::prefix('requests')->group(function () {
