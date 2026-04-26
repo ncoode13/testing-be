@@ -362,10 +362,13 @@ class ShiftSubmissionController extends ApiController
                         'year'    => $dateCarbon->year
                     ]);
 
+                    $newShift = \App\Models\Shift::find($submission->shift_new_id);
+                    $isDayoff = $newShift && (strtolower($newShift->name) === 'dayoff' || strtolower($newShift->name) === 'day off' || strtolower($newShift->name) === 'libur');
+
                     $currentData = $scheduleRow->schedule_data ?? [];
                     $currentData[(string) $dateCarbon->day] = [
-                        'is_off'   => false,
-                        'shift_id' => $submission->shift_new_id
+                        'is_off'   => $isDayoff,
+                        'shift_id' => $isDayoff ? null : $submission->shift_new_id
                     ];
 
                     $scheduleRow->schedule_data = $currentData;
