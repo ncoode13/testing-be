@@ -19,12 +19,14 @@ class ImageService
     {
         $image = $this->manager->read($file);
 
-        $image->scale(width: 1000);
+        // Gunakan scaleDown agar gambar kecil tidak dipaksa dibesarkan (upscale) yang menyebabkannya pecah
+        $image->scaleDown(width: 1000);
 
         $filename = uniqid() . '.webp';
         $path = "$folder/$filename";
 
-        $encoded = $image->toWebp(60);
+        // Tingkatkan kualitas WebP dari 60 ke 80 agar warna tidak pudar dan tidak pecah
+        $encoded = $image->toWebp(80);
 
         Storage::disk('public')->put($path, (string) $encoded);
 
