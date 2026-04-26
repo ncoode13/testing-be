@@ -789,7 +789,14 @@ class ApprovalController extends ApiController
             $date = Carbon::parse($record->date);
             $schedule = \App\Models\ShiftSchedule::firstOrNew(['user_id' => $record->user_id, 'month' => $date->month, 'year' => $date->year]);
             $data = $schedule->schedule_data ?? [];
-            $data[(string)$date->day] = ['is_off' => false, 'shift_id' => $record->shift_new_id];
+            
+            $newShift = \App\Models\Shift::find($record->shift_new_id);
+            $isDayoff = $newShift && (strtolower($newShift->name) === 'dayoff' || strtolower($newShift->name) === 'day off' || strtolower($newShift->name) === 'libur');
+
+            $data[(string)$date->day] = [
+                'is_off' => $isDayoff, 
+                'shift_id' => $isDayoff ? null : $record->shift_new_id
+            ];
             $schedule->schedule_data = $data;
             $schedule->save();
         }
